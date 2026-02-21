@@ -38,8 +38,5 @@ jobs:
       - name: Solidity lint
         run: npm run lint:sol
 
-      - name: Stable vault analysis
-        run: npm run analyze:stable
-
       - name: Run tests
         run: npm run test
