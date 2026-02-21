@@ -79,13 +79,13 @@ Edit values for your target chain before deploying.
 #### 2) Deploy HakoStableVault
 
 ```bash
-yarn deploy:stable:vault --network base --parameters ignition/parameters/stable-base.json
+npm run deploy:stable:vault --network base --parameters ignition/parameters/stable-base.json
 ```
 
 #### 3) Deploy HakoStableGateway
 
 ```bash
-yarn deploy:stable:gateway --network arbitrum --parameters ignition/parameters/stable-gateway-arbitrum.json
+npm run deploy:stable:gateway --network arbitrum --parameters ignition/parameters/stable-gateway-arbitrum.json
 ```
 
 ## Address Registry
