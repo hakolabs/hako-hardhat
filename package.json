@@ -1,0 +1,33 @@
+{
+  "name": "hardhat",
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "lint:sol": "solhint \"contracts/**/*.sol\"",
+    "deploy:stable:vault": "hardhat ignition deploy ignition/modules/HakoStableVault.ts",
+    "deploy:stable:gateway": "hardhat ignition deploy ignition/modules/HakoStableGateway.ts",
+    "upgrade:stable": "hardhat run scripts/upgrade-stable-vault.ts"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ignition": "^3.0.3",
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
+    "@nomicfoundation/hardhat-verify": "^3.0.10",
+    "@types/node": "^22.18.11",
+    "forge-std": "github:foundry-rs/forge-std#v1.9.4",
+    "hardhat": "^3.0.7",
+    "solhint": "^6.0.3",
+    "tsx": "^4.19.2",
+    "typescript": "~5.8.0",
+    "viem": "^2.38.3"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
+    "@openzeppelin/contracts-upgradeable": "^5.4.0",
+    "dotenv": "^17.2.3"
+  }
+}

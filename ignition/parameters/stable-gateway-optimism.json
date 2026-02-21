@@ -1,0 +1,11 @@
+{
+  "HakoStableGateway": {
+    "initialOwner": "0xb996d815a3fe60aAD8E5e392e7ea56930bFFE1ba",
+    "allowedDepositTokens": [
+      "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+      "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
+      "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1"
+    ],
+    "minDepositNormalized": 1000000000000000
+  }
+}

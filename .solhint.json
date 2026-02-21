@@ -1,0 +1,11 @@
+{
+  "extends": "solhint:recommended",
+  "rules": {
+    "func-visibility": ["error", { "ignoreConstructors": true }],
+    "no-global-import": "off",
+    "use-natspec": "off",
+    "gas-indexed-events": "off",
+    "gas-increment-by-one": "off",
+    "no-empty-blocks": "off"
+  }
+}
