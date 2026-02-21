@@ -110,3 +110,7 @@ Until audit results are published:
 - treat this release as an active development/integration build
 - perform your own risk review before any production use
 - report vulnerabilities through the responsible disclosure channel listed in the Official Links section
+
+### Reports
+
+- **Audit Agent:** [pdf](./audit/audit_agent_report.pdf)
