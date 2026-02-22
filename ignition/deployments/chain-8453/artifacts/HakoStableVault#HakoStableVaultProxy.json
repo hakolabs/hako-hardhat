@@ -1,0 +1,79 @@
+{
+  "_format": "hh3-artifact-1",
+  "contractName": "HakoProxy",
+  "sourceName": "contracts/HakoProxy.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "implementation",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "_data",
+          "type": "bytes"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "target",
+          "type": "address"
+        }
+      ],
+      "name": "AddressEmptyCode",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "implementation",
+          "type": "address"
+        }
+      ],
+      "name": "ERC1967InvalidImplementation",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ERC1967NonPayable",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "FailedCall",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "implementation",
+          "type": "address"
+        }
+      ],
+      "name": "Upgraded",
+      "type": "event"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "fallback"
+    }
+  ],
+  "bytecode": "0x60806040523461015e575f610297908138038061001b81610162565b938439820160408382031261015e5782516001600160a01b0381169390919084830361015e576020810151906001600160401b03821161015e57019381601f8601121561015e5784516100756100708261019b565b610162565b9581875260208701936020838301011161015e57815f926020809301865e87010152823b1561014c577f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc80546001600160a01b031916821790557fbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b5f80a28351156101435782809161012a955190845af4903d1561013a573d61011a6100708261019b565b908152809360203d92013e6101b6565b505b604051608290816102158239f35b606092506101b6565b5050505061012c565b634c9c8ce360e01b5f5260045260245ffd5b5f80fd5b6040519190601f01601f191682016001600160401b0381118382101761018757604052565b634e487b7160e01b5f52604160045260245ffd5b6001600160401b03811161018757601f01601f191660200190565b906101da57508051156101cb57602081519101fd5b63d6bda27560e01b5f5260045ffd5b8151158061020b575b6101eb575090565b639996b31560e01b5f9081526001600160a01b0391909116600452602490fd5b50803b156101e356fe60806040527f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc545f9081906001600160a01b0316368280378136915af43d5f803e156048573d5ff35b3d5ffdfea2646970667358221220c6ad65bf42d13940587717fbf32333b67198c2b4411269773e1037379557cb4864736f6c634300081e0033",
+  "deployedBytecode": "0x60806040527f360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc545f9081906001600160a01b0316368280378136915af43d5f803e156048573d5ff35b3d5ffdfea2646970667358221220c6ad65bf42d13940587717fbf32333b67198c2b4411269773e1037379557cb4864736f6c634300081e0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {},
+  "immutableReferences": {},
+  "inputSourceName": "project/contracts/HakoProxy.sol",
+  "buildInfoId": "solc-0_8_30-60e4b3ba0f81c2f93072cea1a56c2e810d28dda1"
+}
