@@ -401,6 +401,14 @@ contract HakoStableVault is
         WithdrawalRequest storage req = layout_.withdrawalRequests[requestId];
         if (req.status != WithdrawalStatus.Pending) revert WithdrawalNotPending(requestId);
 
+        bool payoutOnComplete = layout_.payoutOnComplete[requestId];
+        uint256 payoutAmountToken;
+        if (payoutOnComplete) {
+            if (!layout_.allowedDepositToken[req.token]) revert TokenNotAllowed(req.token);
+            uint8 tokenDecimals = layout_.depositTokenDecimals[req.token];
+            payoutAmountToken = req.amountNormalized / (10 ** (18 - tokenDecimals));
+        }
+
         req.status = WithdrawalStatus.Completed;
 
         layout_.lockedShares[req.owner] -= req.sharesLocked;
@@ -408,6 +416,11 @@ contract HakoStableVault is
         layout_.totalManagedAssets -= req.amountNormalized;
 
         _burn(req.owner, req.sharesLocked);
+
+        if (payoutOnComplete) {
+            IERC20(req.token).safeTransfer(req.receiver, payoutAmountToken);
+            emit WithdrawalPayoutOnCompleteExecuted(requestId, req.receiver, req.token, payoutAmountToken);
+        }
 
         emit WithdrawalCompleted(requestId, req.owner, req.sharesLocked, req.amountNormalized);
     }
@@ -582,6 +595,12 @@ contract HakoStableVault is
     /// @param owner Share owner.
     function withdrawalNonce(address owner) external view returns (uint256) {
         return HakoStableVaultStorage.layout().withdrawalNonces[owner];
+    }
+
+    /// @notice Returns whether request is marked for payout transfer during completion.
+    /// @param requestId Request id.
+    function isWithdrawalPayoutOnComplete(uint256 requestId) external view returns (bool) {
+        return HakoStableVaultStorage.layout().payoutOnComplete[requestId];
     }
 
     /// @notice Returns stored withdrawal request metadata.
@@ -762,6 +781,9 @@ contract HakoStableVault is
         uint256 sharesLocked
     ) internal returns (uint256 requestId) {
         address receiverAddress = _bytesToAddress(receiver);
+        bool payoutOnComplete = dstChainId == uint64(block.chainid);
+        if (payoutOnComplete && receiverAddress == address(0)) revert InvalidReceiverData();
+
         requestId = ++layout_.nextWithdrawalId;
 
         layout_.withdrawalRequests[requestId] = WithdrawalRequest({
@@ -775,6 +797,10 @@ contract HakoStableVault is
         });
 
         layout_.withdrawalReceiverData[requestId] = receiver;
+        if (payoutOnComplete) {
+            layout_.payoutOnComplete[requestId] = true;
+            emit WithdrawalPayoutOnCompleteMarked(requestId, dstChainId, token);
+        }
 
         emit WithdrawalRequested(requestId, owner, dstChainId, token, receiver, amountNormalized, sharesLocked);
     }

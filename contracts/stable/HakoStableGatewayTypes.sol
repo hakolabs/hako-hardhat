@@ -41,6 +41,15 @@ abstract contract HakoStableGatewayTypes is VaultTypes, VaultErrors {
         uint256 amountToken,
         uint256 amountNormalized
     );
+    event GatewayControllerWithdrawalRequested(
+        uint256 indexed requestId,
+        address indexed owner,
+        address indexed receiver,
+        address token,
+        uint256 amountToken,
+        uint256 amountNormalized,
+        uint256 nonce
+    );
 
     event GatewayWithdrawalCompleted(uint256 indexed requestId, address indexed receiver, address indexed token, uint256 amountToken);
 

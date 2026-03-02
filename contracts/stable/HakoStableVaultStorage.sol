@@ -36,6 +36,7 @@ library HakoStableVaultStorage {
         mapping(bytes32 => address) accountHashToPseudo;
         mapping(address => bytes32) pseudoToAccountHash;
         mapping(bytes32 => bool) processedTransferOut;
+        mapping(uint256 => bool) payoutOnComplete;
     }
 
     bytes32 internal constant STORAGE_SLOT = keccak256("hako.vault.storage");

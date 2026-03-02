@@ -19,6 +19,7 @@ library HakoStableGatewayStorage {
         mapping(address => bool) allowedExternalVault;
         mapping(address => address) externalVaultAsset;
         address[] externalVaultsList;
+        mapping(address => uint256) withdrawalNonces;
     }
 
     bytes32 internal constant STORAGE_SLOT = keccak256("hako.stable.gateway.storage");

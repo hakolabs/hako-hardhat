@@ -30,6 +30,7 @@ contract HakoStableGateway is
 
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     bytes32 public constant GUARDIAN_ROLE = keccak256("GUARDIAN_ROLE");
+    bytes32 public constant RELAYER_ROLE = keccak256("RELAYER_ROLE");
     bytes32 public constant WITHDRAW_FINALIZER_ROLE = keccak256("WITHDRAW_FINALIZER_ROLE");
     bytes32 public constant ASSET_MANAGER_ROLE = keccak256("ASSET_MANAGER_ROLE");
     bytes32 public constant CONFIG_MANAGER_ROLE = keccak256("CONFIG_MANAGER_ROLE");
@@ -58,6 +59,7 @@ contract HakoStableGateway is
         _grantRole(DEFAULT_ADMIN_ROLE, initialOwner);
         _grantRole(UPGRADER_ROLE, initialOwner);
         _grantRole(GUARDIAN_ROLE, initialOwner);
+        _grantRole(RELAYER_ROLE, initialOwner);
         _grantRole(WITHDRAW_FINALIZER_ROLE, initialOwner);
         _grantRole(ASSET_MANAGER_ROLE, initialOwner);
         _grantRole(CONFIG_MANAGER_ROLE, initialOwner);
@@ -163,6 +165,43 @@ contract HakoStableGateway is
 
         uint256 amountNormalized = VaultMath.normalizeAmount(amountToken, decimals);
         requestId = _createWithdrawalRequest(msg.sender, receiver, token, amountToken, amountNormalized);
+    }
+
+    /// @notice Relayer-created withdrawal request for an owner with nonce protection.
+    /// @param owner Withdrawal owner.
+    /// @param token Withdrawal token address.
+    /// @param amountToken Requested payout amount in token decimals.
+    /// @param receiver Payout receiver address on this chain.
+    /// @param expectedNonce Expected current withdrawal nonce for the owner.
+    /// @return requestId Created withdrawal request id.
+    function requestWithdrawalController(
+        address owner,
+        address token,
+        uint256 amountToken,
+        address receiver,
+        uint256 expectedNonce
+    ) external onlyRole(RELAYER_ROLE) nonReentrant whenNotPaused returns (uint256 requestId) {
+        if (owner == address(0) || receiver == address(0)) revert ZeroAddress();
+
+        uint8 decimals = _requireAllowedToken(token);
+        if (amountToken == 0) revert AmountZero();
+
+        HakoStableGatewayStorage.Layout storage layout_ = HakoStableGatewayStorage.layout();
+        uint256 nonce = layout_.withdrawalNonces[owner];
+        if (nonce != expectedNonce) revert InvalidWithdrawalNonce(expectedNonce, nonce);
+        layout_.withdrawalNonces[owner] = nonce + 1;
+
+        uint256 amountNormalized = VaultMath.normalizeAmount(amountToken, decimals);
+        requestId = _createWithdrawalRequest(owner, receiver, token, amountToken, amountNormalized);
+        emit GatewayControllerWithdrawalRequested(
+            requestId,
+            owner,
+            receiver,
+            token,
+            amountToken,
+            amountNormalized,
+            nonce
+        );
     }
 
     /// @notice Completes a pending withdrawal request and pays token to receiver.
@@ -320,6 +359,11 @@ contract HakoStableGateway is
     /// @param requestId Request id.
     function getWithdrawalReceiver(uint256 requestId) external view returns (bytes memory) {
         return HakoStableGatewayStorage.layout().withdrawalReceiverData[requestId];
+    }
+
+    /// @notice Returns current withdrawal nonce for an owner.
+    function withdrawalNonce(address owner) external view returns (uint256) {
+        return HakoStableGatewayStorage.layout().withdrawalNonces[owner];
     }
 
     /// @notice Returns current non-zero external vault positions with normalized valuation.

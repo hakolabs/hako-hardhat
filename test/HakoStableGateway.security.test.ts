@@ -24,6 +24,7 @@ describe("HakoStableGateway roles and pause security", () => {
       "DEFAULT_ADMIN_ROLE",
       "UPGRADER_ROLE",
       "GUARDIAN_ROLE",
+      "RELAYER_ROLE",
       "WITHDRAW_FINALIZER_ROLE",
       "ASSET_MANAGER_ROLE",
       "CONFIG_MANAGER_ROLE",
@@ -277,5 +278,59 @@ describe("HakoStableGateway roles and pause security", () => {
       }),
       /AccessControl/,
     );
+  });
+
+  it("only upgrader can authorize UUPS upgrade", async () => {
+    const newImpl = await ctx.viem.deployContract("HakoStableGateway", [], {
+      client: { wallet: ctx.owner },
+    });
+
+    await assert.rejects(
+      ctx.user.writeContract({
+        address: ctx.gateway.address,
+        abi: ctx.gateway.abi,
+        functionName: "upgradeToAndCall",
+        args: [newImpl.address, "0x"],
+      }),
+      /AccessControl/,
+    );
+  });
+
+  it("upgrader can upgrade gateway without breaking nonce state", async () => {
+    await seedUsdc("400");
+
+    await ctx.owner.writeContract({
+      address: ctx.gateway.address,
+      abi: ctx.gateway.abi,
+      functionName: "requestWithdrawalController",
+      args: [ctx.user.account.address, ctx.usdc.address, parseUnits("40", 6), ctx.user.account.address, 0n],
+    });
+
+    const nonceBefore = await ctx.publicClient.readContract({
+      address: ctx.gateway.address,
+      abi: ctx.gateway.abi,
+      functionName: "withdrawalNonce",
+      args: [ctx.user.account.address],
+    });
+    assert.equal(nonceBefore, 1n);
+
+    const newImpl = await ctx.viem.deployContract("HakoStableGateway", [], {
+      client: { wallet: ctx.owner },
+    });
+
+    await ctx.owner.writeContract({
+      address: ctx.gateway.address,
+      abi: ctx.gateway.abi,
+      functionName: "upgradeToAndCall",
+      args: [newImpl.address, "0x"],
+    });
+
+    const nonceAfter = await ctx.publicClient.readContract({
+      address: ctx.gateway.address,
+      abi: ctx.gateway.abi,
+      functionName: "withdrawalNonce",
+      args: [ctx.user.account.address],
+    });
+    assert.equal(nonceAfter, 1n);
   });
 });

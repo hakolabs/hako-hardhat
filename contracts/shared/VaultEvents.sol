@@ -58,6 +58,13 @@ abstract contract VaultEvents {
         uint256 sharesBurned,
         uint256 amountNormalized
     );
+    event WithdrawalPayoutOnCompleteMarked(uint256 indexed requestId, uint64 indexed dstChainId, address indexed token);
+    event WithdrawalPayoutOnCompleteExecuted(
+        uint256 indexed requestId,
+        address indexed receiver,
+        address indexed token,
+        uint256 amountToken
+    );
 
     event WithdrawalCanceled(uint256 indexed requestId, address indexed owner, uint256 sharesUnlocked);
     event TransferOut(

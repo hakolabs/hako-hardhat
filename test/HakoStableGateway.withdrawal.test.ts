@@ -31,6 +31,16 @@ type GatewayWithdrawalCanceledArgs = {
   amountToken: bigint;
 };
 
+type GatewayControllerWithdrawalRequestedArgs = {
+  requestId: bigint;
+  owner: `0x${string}`;
+  receiver: `0x${string}`;
+  token: `0x${string}`;
+  amountToken: bigint;
+  amountNormalized: bigint;
+  nonce: bigint;
+};
+
 const STATUS_PENDING = 1;
 const STATUS_COMPLETED = 2;
 const STATUS_CANCELED = 3;
@@ -109,6 +119,88 @@ describe("HakoStableGateway withdrawal lifecycle", () => {
     const req = await readRequest(1n);
     assert.equal(req.amountToken, parseUnits("150", 6));
     assert.equal(req.status, STATUS_PENDING);
+  });
+
+  it("creates relayer withdrawal request with nonce protection", async () => {
+    await seedUsdc("500");
+
+    const ownerNonceBefore = await ctx.publicClient.readContract({
+      address: ctx.gateway.address,
+      abi: ctx.gateway.abi,
+      functionName: "withdrawalNonce",
+      args: [ctx.user.account.address],
+    });
+    assert.equal(ownerNonceBefore, 0n);
+
+    const txHash = await ctx.owner.writeContract({
+      address: ctx.gateway.address,
+      abi: ctx.gateway.abi,
+      functionName: "requestWithdrawalController",
+      args: [
+        ctx.user.account.address,
+        ctx.usdc.address,
+        parseUnits("90", 6),
+        ctx.user.account.address,
+        0n,
+      ],
+    });
+
+    const event = await getGatewayEventArgs<GatewayControllerWithdrawalRequestedArgs>(
+      ctx,
+      txHash,
+      "GatewayControllerWithdrawalRequested",
+    );
+    assert.equal(event.requestId, 1n);
+    assert.equal(event.owner.toLowerCase(), ctx.user.account.address.toLowerCase());
+    assert.equal(event.receiver.toLowerCase(), ctx.user.account.address.toLowerCase());
+    assert.equal(event.token.toLowerCase(), ctx.usdc.address.toLowerCase());
+    assert.equal(event.amountToken, parseUnits("90", 6));
+    assert.equal(event.amountNormalized, parseUnits("90", 18));
+    assert.equal(event.nonce, 0n);
+
+    const ownerNonceAfter = await ctx.publicClient.readContract({
+      address: ctx.gateway.address,
+      abi: ctx.gateway.abi,
+      functionName: "withdrawalNonce",
+      args: [ctx.user.account.address],
+    });
+    assert.equal(ownerNonceAfter, 1n);
+
+    await assert.rejects(
+      ctx.owner.writeContract({
+        address: ctx.gateway.address,
+        abi: ctx.gateway.abi,
+        functionName: "requestWithdrawalController",
+        args: [
+          ctx.user.account.address,
+          ctx.usdc.address,
+          parseUnits("10", 6),
+          ctx.user.account.address,
+          0n,
+        ],
+      }),
+      /InvalidWithdrawalNonce/,
+    );
+  });
+
+  it("restricts relayer withdrawal request to RELAYER_ROLE", async () => {
+    await seedUsdc("200");
+
+    await assert.rejects(
+      ctx.user.writeContract({
+        address: ctx.gateway.address,
+        abi: ctx.gateway.abi,
+        functionName: "requestWithdrawalController",
+        args: [
+          ctx.user.account.address,
+          ctx.usdc.address,
+          parseUnits("40", 6),
+          ctx.user.account.address,
+          0n,
+        ],
+      }),
+      /AccessControl/,
+    );
   });
 
   it("completes pending withdrawal and transfers payout to receiver", async () => {

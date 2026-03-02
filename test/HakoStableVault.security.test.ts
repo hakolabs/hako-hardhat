@@ -602,12 +602,41 @@ describe("HakoStableVault roles and security", () => {
   });
 
   it("upgrader role can execute UUPS upgrade without breaking state", async () => {
+    await seedDeposit("200");
+    const localChainId = BigInt(await ctx.publicClient.getChainId());
+    await ctx.owner.writeContract({
+      address: ctx.stableVault.address,
+      abi: ctx.stableVault.abi,
+      functionName: "setDestinationChainAllowed",
+      args: [localChainId, true],
+    });
+    await ctx.owner.writeContract({
+      address: ctx.stableVault.address,
+      abi: ctx.stableVault.abi,
+      functionName: "setDestinationAssetAllowed",
+      args: [localChainId, ctx.usdc.address, true],
+    });
+
+    await ctx.user.writeContract({
+      address: ctx.stableVault.address,
+      abi: ctx.stableVault.abi,
+      functionName: "requestWithdrawal",
+      args: [ctx.user.account.address, localChainId, ctx.usdc.address, parseUnits("50", 18), parseUnits("50", 18)],
+    });
+
     const beforeHwm = await ctx.publicClient.readContract({
       address: ctx.stableVault.address,
       abi: ctx.stableVault.abi,
       functionName: "highWaterMark",
       args: [],
     });
+    const payoutFlagBefore = await ctx.publicClient.readContract({
+      address: ctx.stableVault.address,
+      abi: ctx.stableVault.abi,
+      functionName: "isWithdrawalPayoutOnComplete",
+      args: [1n],
+    });
+    assert.equal(payoutFlagBefore, true);
 
     const newImpl = await ctx.viem.deployContract("HakoStableVault", [], {
       client: { wallet: ctx.owner },
@@ -626,8 +655,15 @@ describe("HakoStableVault roles and security", () => {
       functionName: "highWaterMark",
       args: [],
     });
+    const payoutFlagAfter = await ctx.publicClient.readContract({
+      address: ctx.stableVault.address,
+      abi: ctx.stableVault.abi,
+      functionName: "isWithdrawalPayoutOnComplete",
+      args: [1n],
+    });
 
     assert.equal(afterHwm, beforeHwm);
+    assert.equal(payoutFlagAfter, payoutFlagBefore);
   });
 
   it("locked shares prevent transferring more than unlocked balance", async () => {

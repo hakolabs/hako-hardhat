@@ -11,7 +11,10 @@
     "lint:sol": "solhint \"contracts/**/*.sol\"",
     "deploy:stable:vault": "hardhat ignition deploy ignition/modules/HakoStableVault.ts",
     "deploy:stable:gateway": "hardhat ignition deploy ignition/modules/HakoStableGateway.ts",
-    "upgrade:stable": "hardhat run scripts/upgrade-stable-vault.ts"
+    "upgrade:stable:vault": "hardhat run scripts/upgrade-stable-vault.ts",
+    "upgrade:stable:vault:base": "hardhat run scripts/upgrade-stable-vault-base.ts --network base",
+    "upgrade:stable:gateway": "hardhat run scripts/upgrade-stable-gateway.ts",
+    "upgrade:stable:gateway:ethereum": "hardhat run scripts/upgrade-stable-gateway-ethereum.ts --network ethereum"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.3",

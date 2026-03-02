@@ -14,25 +14,46 @@ function parseImplementationSlot(value: `0x${string}`): Address {
   return getAddress(`0x${value.slice(-40)}`);
 }
 
+function requireAddressEnv(name: string): Address {
+  const raw = (process.env[name] ?? "").trim();
+  if (!raw) {
+    throw new Error(`Set ${name}`);
+  }
+  return getAddress(raw as Address);
+}
+
 async function main() {
   const connection = await hre.network.connect();
   const { viem } = connection;
 
   const [deployer] = await viem.getWalletClients();
   if (!deployer) {
-    throw new Error("No deployer wallet available. Configure DEPLOYER_PRIVATE_KEY in .env");
+    throw new Error(
+      "No deployer wallet available. Configure DEPLOYER_PRIVATE_KEY in .env",
+    );
   }
 
-  const proxyAddress = getAddress(
-    (process.env.HAKO_STABLE_VAULT_PROXY ?? "").trim() as Address,
-  );
-
-  if (!proxyAddress) {
-    throw new Error("Set HAKO_STABLE_VAULT_PROXY");
-  }
-
+  const proxyAddress = requireAddressEnv("HAKO_STABLE_VAULT_PROXY");
   const publicClient = await viem.getPublicClient();
   const { abi } = await hre.artifacts.readArtifact("HakoStableVault");
+
+  const upgraderRole = await publicClient.readContract({
+    address: proxyAddress,
+    abi,
+    functionName: "UPGRADER_ROLE",
+    args: [],
+  });
+  const hasUpgraderRole = await publicClient.readContract({
+    address: proxyAddress,
+    abi,
+    functionName: "hasRole",
+    args: [upgraderRole, deployer.account.address],
+  });
+  if (!hasUpgraderRole) {
+    throw new Error(
+      `Deployer ${deployer.account.address} does not have UPGRADER_ROLE on ${proxyAddress}`,
+    );
+  }
 
   const beforeSlot = await publicClient.getStorageAt({
     address: proxyAddress,
@@ -65,7 +86,7 @@ async function main() {
       eventImpl = getAddress(decoded.args.implementation);
       break;
     } catch {
-      // ignore non-upgrade logs
+      continue;
     }
   }
 
@@ -74,6 +95,12 @@ async function main() {
     slot: EIP1967_IMPLEMENTATION_SLOT,
   });
   const afterImpl = parseImplementationSlot(afterSlot);
+
+  if (afterImpl !== getAddress(newImplementation.address)) {
+    throw new Error(
+      `Upgrade failed: implementation slot ${afterImpl} does not match deployed implementation ${newImplementation.address}`,
+    );
+  }
 
   console.log("Proxy:", proxyAddress);
   console.log("Deployer:", deployer.account.address);
