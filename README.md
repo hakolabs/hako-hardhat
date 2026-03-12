@@ -7,7 +7,7 @@ Smart contracts for Hako stable-asset vaulting and multichain gateway execution.
 - [Documentation](https://hako.gitbook.io/docs/)
 - [Web](https://hakolabs.app/)
 - [DApp](http://app.hakolabs.app/)
-- [Dune Dashboard (soon)]()
+- [Dune Dashboard](https://dune.com/hakolabs/hako-protocol)
 - [DefiLlama](https://defillama.com/protocol/hako)
 
 This repo contains:
